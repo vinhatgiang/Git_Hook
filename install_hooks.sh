@@ -76,9 +76,6 @@ for hook in commit-msg pre-commit pre-push pre-rebase; do
     echo "✅ Installed: $hook"
 done
 
-    echo "✅ Installed: $hook"
-done
-
 # Display installation result
 echo
 echo "✅ Git hooks installed successfully!"
