@@ -46,3 +46,4 @@ Update installation guide
 - Không thể force push
 - Không thể thực hiện rebase
 - Commit message phải có ít nhất 10 ký tự
+new content to test
