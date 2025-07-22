@@ -11,9 +11,9 @@ show_dialog() {
 
 echo
 echo "REBASE OPERATION BLOCKED"
-echo "All rebase operations are prohibited for maintaining git history integrity."
-echo "Please use merge instead of rebase."
+echo "Rebase is prohibited in this repository."
+echo "This action is not allowed."
 
-show_dialog "Rebase operation is blocked.\n\nThis action is prohibited for maintaining git history integrity.\n\nPlease:\n1. Use merge instead of rebase\n2. Create a Pull Request if needed\n3. Contact team lead if you need assistance" "Rebase Operation Blocked"
+show_dialog "Rebase operation is blocked.\n\nRebase is prohibited in this repository." "Rebase Blocked"
 
 exit 1

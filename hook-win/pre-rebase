@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Git Hook: pre-rebase
-# Platform: Git Bash (Windows, macOS, Linux)
-# Purpose: Prevent rebase on protected branches
+# Platform: Windows (Git Bash)
+# Purpose: Block ALL rebase operations completely
 
 show_dialog() {
     msg="$1"
@@ -10,18 +10,11 @@ show_dialog() {
     powershell.exe -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$msg', '$title')" > /dev/null
 }
 
-protected_branches=("main" "develop")
+echo
+echo "REBASE OPERATION BLOCKED"
+echo "Rebase is prohibited in this repository."
+echo "This action is not allowed."
 
-current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+show_dialog "Rebase operation is blocked. Rebase is prohibited in this repository." "Rebase Blocked"
 
-for branch in "${protected_branches[@]}"; do
-    if [[ "$current_branch" == "$branch" ]]; then
-        echo "Rebase on $branch is blocked. Please use merge or create a feature branch."
-        show_dialog "Rebase on $branch is blocked. Please use merge or create a feature branch." "Rebase Blocked"
-        exit 1
-    fi
-
-done
-
-echo "Pre-rebase checks passed"
-exit 0
+exit 1

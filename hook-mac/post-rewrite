@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Git Hook: post-rewrite
+# Platform: macOS
+# Purpose: Block history rewriting operations after they happen
+
+# Function to show macOS dialog
+show_dialog() {
+    osascript -e "display dialog \"$1\" buttons {\"OK\"} default button \"OK\" with icon caution with title \"$2\""
+}
+
+# Function to log rewrite attempt
+log_rewrite_attempt() {
+    local log_file=".git/rewrite_blocked.log"
+    echo "$(date): History rewrite detected - $1" >> "$log_file"
+}
+
+# Check what type of rewrite operation occurred
+operation_type="$1"
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+case "$operation_type" in
+    "rebase")
+        log_rewrite_attempt "Rebase operation detected on branch: $current_branch"
+        echo
+        echo "HISTORY REWRITE DETECTED (REBASE)"
+        echo "A rebase operation has been completed."
+        echo "Rebase is prohibited in this repository."
+        
+        show_dialog "History rewrite detected.\n\nA rebase operation has been completed.\nRebase is prohibited in this repository." "Rebase Detected"
+        ;;
+    
+    "amend")
+        log_rewrite_attempt "Commit amend detected on branch: $current_branch"
+        echo
+        echo "COMMIT AMEND DETECTED"
+        echo "A commit amend operation was performed."
+        ;;
+    
+    *)
+        log_rewrite_attempt "Unknown history rewrite: $operation_type on branch: $current_branch"
+        echo
+        echo "UNKNOWN HISTORY REWRITE DETECTED"
+        echo "An unknown history rewrite operation occurred."
+        
+        show_dialog "Unknown history rewrite detected.\n\nAn unknown history rewrite operation occurred." "History Rewrite Detected"
+        ;;
+esac
+
+# Always exit successfully for post-rewrite (we can't prevent what already happened)
+exit 0 

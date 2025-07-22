@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Git Hook: commit-msg
-# Platform: Git Bash (Windows, macOS, Linux)
-# Purpose: Enforce commit message format
+# Platform: Windows (Git Bash)
+# Purpose: Enforce commit message rules
 
 commit_msg_file="$1"
 commit_msg=$(cat "$commit_msg_file")
@@ -15,11 +15,24 @@ show_dialog() {
 
 # Check minimum length (10 characters)
 if [ ${#commit_msg} -lt 10 ]; then
-    echo "Commit message is too short (minimum 10 characters)."
-    echo "Your message: $commit_msg"
-    show_dialog "Commit message is too short (minimum 10 characters). Your message: $commit_msg" "Commit Message Error"
+    echo
+    echo "COMMIT MESSAGE TOO SHORT"
+    echo "Minimum 10 characters required."
+    
+    show_dialog "Commit message is too short. Minimum 10 characters required." "Invalid Message"
     exit 1
 fi
 
-echo "✅ Commit message validation passed"
+# Check commit message format (type: description)
+if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore): "; then
+    echo
+    echo "INVALID COMMIT MESSAGE FORMAT"
+    echo "Must start with: feat:, fix:, docs:, style:, refactor:, test:, or chore:"
+    
+    show_dialog "Invalid commit message format. Must start with: feat:, fix:, docs:, style:, refactor:, test:, or chore:" "Invalid Format"
+    
+    exit 1
+fi
+
+echo "Commit message validation passed"
 exit 0

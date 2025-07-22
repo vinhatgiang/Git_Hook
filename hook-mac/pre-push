@@ -13,16 +13,48 @@ show_dialog() {
 if echo "$*" | grep -q -- "--force\|--force-with-lease\|-f"; then
     echo
     echo "FORCE PUSH BLOCKED"
-    echo "Force push detected and blocked for repository safety."
-    echo "Force pushes can overwrite history and cause data loss."
+    echo "Force push is not allowed."
 
-    show_dialog "Force push detected and blocked for repository safety.\n\nForce pushes can overwrite history and cause data loss.\n\nSafer alternatives:\n1. Resolve conflicts properly\n2. Create a new branch if needed\n3. Coordinate with your team" "Force Push Blocked"
+    show_dialog "Force push is blocked.\n\nThis action is not allowed." "Force Push Blocked"
     
     exit 1
 fi
 
+# Check for rebase in commit history being pushed
+check_for_rebase_in_history() {
+    local local_sha="$1"
+    local remote_sha="$2"
+    
+    # If remote_sha is all zeros, this is a new branch
+    if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+        # Check last 10 commits for rebase patterns
+        if git log --oneline -10 "$local_sha" | grep -q "^[a-f0-9]\{7\} [A-Z]"; then
+            return 0
+        fi
+    else
+        # Check commits between remote and local for rebase patterns
+        if git log --oneline "$remote_sha..$local_sha" | grep -q "^[a-f0-9]\{7\} [A-Z]"; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
 # Read push information from stdin and process each line
 while read local_ref local_sha remote_ref remote_sha; do
+    # Check for rebase in history
+    if check_for_rebase_in_history "$local_sha" "$remote_sha"; then
+        echo
+        echo "REBASE DETECTED IN PUSH HISTORY"
+        echo "The commits contain evidence of rebase operations."
+        echo "Rebase is prohibited in this repository."
+        echo "Push blocked."
+        
+        show_dialog "Rebase detected in push history.\n\nRebase is prohibited in this repository." "Push Blocked"
+        
+        exit 1
+    fi
+    
     # Extract branch name from remote ref (refs/heads/branch-name)
     if [[ "$remote_ref" =~ ^refs/heads/ ]]; then
         remote_branch=${remote_ref#refs/heads/}
@@ -31,10 +63,9 @@ while read local_ref local_sha remote_ref remote_sha; do
         if [ "$remote_branch" = "main" ]; then
             echo
             echo "PUSH TO MAIN BRANCH BLOCKED"
-            echo "You are trying to push directly to the '$remote_branch' branch."
-            echo "This action is prohibited for code safety and review process."
+            echo "This action is not allowed."
             
-            show_dialog "You are trying to push directly to the main branch.\n\nThis action is prohibited for code safety.\n\nPlease:\n1. Push to a feature branch\n2. Create a Pull Request\n3. Merge through PR after approval" "Push to Main Branch Blocked"
+            show_dialog "Push to main branch is blocked.\n\nThis action is not allowed." "Push Blocked"
             
             exit 1
         fi
@@ -42,15 +73,14 @@ while read local_ref local_sha remote_ref remote_sha; do
         if [ "$remote_branch" = "develop" ]; then
             echo
             echo "PUSH TO DEVELOP BRANCH BLOCKED"
-            echo "You are trying to push directly to the '$remote_branch' branch."
-            echo "This action is prohibited for development workflow integrity."
+            echo "This action is not allowed."
             
-            show_dialog "You are trying to push directly to the develop branch.\n\nThis action is prohibited for development workflow.\n\nPlease:\n1. Push to a feature branch\n2. Create a Pull Request\n3. Merge through PR after review" "Push to Develop Branch Blocked"
+            show_dialog "Push to develop branch is blocked.\n\nThis action is not allowed." "Push Blocked"
             
             exit 1
         fi
     fi
 done
 
-echo "✅ Pre-push checks passed"
+echo "Pre-push checks passed"
 exit 0

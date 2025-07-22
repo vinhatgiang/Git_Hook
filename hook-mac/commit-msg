@@ -16,10 +16,9 @@ msg=$(cat "$1")
 if [ ${#msg} -lt 10 ]; then
     echo
     echo "COMMIT MESSAGE TOO SHORT"
-    echo "Your commit message must be at least 10 characters long."
-    echo "Current message: $msg"
+    echo "Minimum 10 characters required."
     
-    show_dialog "Your commit message is too short (minimum 10 characters).\n\nCommit Message Rules:\n1. Start with type: feat, fix, docs, style, refactor, test, chore\n2. Example: feat: add login feature\n3. Minimum 10 characters\n4. Be descriptive and clear\n\nCurrent message: $msg" "Invalid Commit Message"
+    show_dialog "Commit message is too short.\n\nMinimum 10 characters required." "Invalid Commit Message"
     
     exit 1
 fi
@@ -28,13 +27,12 @@ fi
 if ! echo "$msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore): "; then
     echo
     echo "INVALID COMMIT MESSAGE FORMAT"
-    echo "Your commit message must start with one of: feat:, fix:, docs:, style:, refactor:, test:, chore:"
-    echo "Current message: $msg"
+    echo "Must start with: feat:, fix:, docs:, style:, refactor:, test:, or chore:"
     
-    show_dialog "Invalid commit message format.\n\nCommit Message Rules:\n1. Start with type: feat, fix, docs, style, refactor, test, chore\n2. Example: feat: add login feature\n3. Minimum 10 characters\n4. Be descriptive and clear\n\nCurrent message: $msg" "Invalid Commit Message Format"
+    show_dialog "Invalid commit message format.\n\nMust start with: feat:, fix:, docs:, style:, refactor:, test:, or chore:" "Invalid Format"
     
     exit 1
 fi
 
-echo "✅ Commit message validation passed"
+echo "Commit message validation passed"
 exit 0

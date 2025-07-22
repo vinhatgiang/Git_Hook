@@ -16,10 +16,9 @@ current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
 if [ "$current_branch" = "main" ]; then
     echo
     echo "COMMIT TO MAIN BRANCH BLOCKED"
-    echo "You are trying to commit directly to the main branch."
-    echo "This action is prohibited for code safety and review process."
+    echo "This action is not allowed."
     
-    show_dialog "You are trying to commit directly to the main branch.\n\nThis action is prohibited for code safety.\n\nPlease:\n1. Create a feature branch\n2. Commit to that branch\n3. Create a Pull Request" "Commit to Main Branch Blocked"
+    show_dialog "Commit to main branch is blocked.\n\nThis action is not allowed." "Commit Blocked"
     
     exit 1
 fi
@@ -27,25 +26,52 @@ fi
 if [ "$current_branch" = "develop" ]; then
     echo
     echo "COMMIT TO DEVELOP BRANCH BLOCKED"
-    echo "You are trying to commit directly to the develop branch."
-    echo "This action is prohibited for development workflow integrity."
+    echo "This action is not allowed."
     
-    show_dialog "You are trying to commit directly to the develop branch.\n\nThis action is prohibited for development workflow.\n\nPlease:\n1. Create a feature branch\n2. Commit to that branch\n3. Create a Pull Request" "Commit to Develop Branch Blocked"
+    show_dialog "Commit to develop branch is blocked.\n\nThis action is not allowed." "Commit Blocked"
     
     exit 1
 fi
 
-# Check for rebase in progress
+# Enhanced rebase detection - check multiple rebase states
+rebase_detected=false
+rebase_type=""
+
+# Check for various rebase states
 if [ -d "$(git rev-parse --git-dir)/rebase-merge" ]; then
+    rebase_detected=true
+    rebase_type="interactive rebase"
+elif [ -d "$(git rev-parse --git-dir)/rebase-apply" ]; then
+    rebase_detected=true
+    rebase_type="apply rebase"
+elif [ -f "$(git rev-parse --git-dir)/REBASE_HEAD" ]; then
+    rebase_detected=true
+    rebase_type="modern rebase"
+elif [ -f "$(git rev-parse --git-dir)/rebase-merge/interactive" ]; then
+    rebase_detected=true
+    rebase_type="interactive rebase (alternative)"
+fi
+
+# Check environment variables that might indicate rebase
+if [ -n "$GIT_REBASE_TODO" ] || [ -n "$GIT_REFLOG_ACTION" ]; then
+    if echo "$GIT_REFLOG_ACTION" | grep -q "rebase"; then
+        rebase_detected=true
+        rebase_type="environment-detected rebase"
+    fi
+fi
+
+# Block if any rebase detected
+if [ "$rebase_detected" = true ]; then
     echo
     echo "REBASE OPERATION DETECTED"
     echo "A rebase operation is in progress."
-    echo "This action is prohibited for maintaining commit history integrity."
+    echo "Rebase is prohibited in this repository."
+    echo "This action is not allowed."
     
-    show_dialog "A rebase operation is in progress.\n\nThis action is prohibited for maintaining commit history integrity.\n\nPlease:\n1. Complete or abort the rebase\n2. Resolve any conflicts\n3. Consider using merge instead" "Rebase Operation Detected"
+    show_dialog "Rebase operation detected.\n\nRebase is prohibited in this repository." "Rebase Detected"
     
     exit 1
 fi
 
-echo "✅ Pre-commit checks passed"
+echo "Pre-commit checks passed"
 exit 0
