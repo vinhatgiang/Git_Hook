@@ -21,20 +21,71 @@ Bộ Git hooks này giúp đảm bảo quy tắc phát triển và chất lượ
    - Chặn rebase vào nhánh được bảo vệ
    - Hiển thị cảnh báo chi tiết với hướng dẫn thay thế
 
-## Cách Cài Đặt
+## Cài Đặt Git Hooks
 
-### Windows
-1. Copy thư mục `hook-win` vào dự án của bạn
-2. Chạy file `install_hooks.bat`
+### Yêu Cầu Hệ Thống
+- **Windows**: Windows 10 trở lên
+- **macOS**: macOS 10.15 trở lên
+- **Git**: Phiên bản 2.30.0 trở lên
 
-### macOS
-1. Copy thư mục `hook-mac` vào dự án của bạn
-2. Mở terminal và chạy các lệnh:
+### Cài Đặt Trên Windows
+1. Copy toàn bộ thư mục `hook-win` vào thư mục gốc của dự án Git
+2. Mở Command Prompt hoặc PowerShell
+3. Chạy lệnh:
+   ```cmd
+   cd đường-dẫn-tới-dự-án-git
+   .\hook-win\install_hooks.bat
+   ```
+
+### Cài Đặt Trên macOS
+1. Copy toàn bộ thư mục `hook-mac` vào thư mục gốc của dự án Git
+2. Mở Terminal
+3. Chạy các lệnh:
    ```bash
-   cd đường-dẫn-tới-dự-án
-   chmod +x hook-mac/install_hooks
+   cd đường-dẫn-tới-dự-án-git
+   chmod +x ./hook-mac/install_hooks
    ./hook-mac/install_hooks
    ```
+
+### Kiểm Tra Cài Đặt
+Script sẽ tự động:
+- ✓ Kiểm tra tất cả các file hook cần thiết
+- ✓ Sao lưu hooks hiện có (nếu có)
+- ✓ Cài đặt và cấp quyền cho các hook mới
+- ✓ Hiển thị kết quả chi tiết
+
+### Xử Lý Lỗi Thường Gặp
+
+#### 1. "Not a Git repository"
+- **Nguyên nhân**: Chưa khởi tạo Git repository
+- **Cách xử lý**: Chạy `git init` trước khi cài đặt hooks
+
+#### 2. "Missing required hook files"
+- **Nguyên nhân**: Thiếu file hook trong thư mục
+- **Cách xử lý**: Kiểm tra đã copy đầy đủ các file từ thư mục gốc
+
+#### 3. "Permission denied"
+- **Windows**: Chạy Command Prompt với quyền Administrator
+- **macOS**: Chạy `chmod +x` cho file install_hooks
+
+### Các Hook Được Cài Đặt
+1. **pre-commit**: Chặn commit trực tiếp vào main/develop
+2. **commit-msg**: Kiểm tra định dạng commit message
+3. **pre-push**: Chặn push và force push vào main/develop
+4. **pre-rebase**: Chặn mọi thao tác rebase
+
+### Quy Trình Làm Việc Khuyến Nghị
+1. Tạo nhánh mới: `git checkout -b feature/tên-tính-năng`
+2. Thêm thay đổi: `git add .`
+3. Commit với message đúng định dạng: `git commit -m "type: mô tả"`
+4. Đẩy code lên: `git push origin feature/tên-tính-năng`
+5. Tạo Pull Request để review và merge
+
+### Hỗ Trợ
+Nếu gặp vấn đề, vui lòng:
+1. Kiểm tra log trong terminal
+2. Đọc kỹ thông báo lỗi hiển thị
+3. Liên hệ team lead để được hỗ trợ
 
 ## Xử Lý Khi Bị Chặn
 
