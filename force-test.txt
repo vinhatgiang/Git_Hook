@@ -1,2 +1,1 @@
-Force push test
-Different content
+Conflicting content
