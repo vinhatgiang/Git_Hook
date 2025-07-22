@@ -1,76 +1,80 @@
 #!/bin/bash
 
-# Script to install Git hooks to prevent unsafe Git operations
+# Script to install Git hooks
 # Platform: Windows (Git Bash) / macOS
-# Purpose: Install and configure multiple Git hooks with permissions
 
 # Display header
 echo "====================================="
 echo "        Git Hooks Installer"
 echo "====================================="
-echo
+
+# Simple path setup
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GIT_DIR=".git"
+HOOKS_DIR=".git/hooks"
 
 # Check if we're in a Git repository
-if [ ! -d ".git" ]; then
-    echo "❌ Error: This script must be run from the root of a Git repository."
-    echo "Current directory does not appear to be a Git repository (no .git directory found)."
+if [ ! -d "$GIT_DIR" ]; then
+    echo "❌ Error: Run this script from Git repository root"
     exit 1
 fi
 
-# Set hooks directory
-hooks_dir=".git/hooks"
+# Create hooks directory
+mkdir -p "$HOOKS_DIR"
 
-# Determine OS and set source directory
+# Force Git to track file modes on Windows
+git config core.fileMode true
+
+# Determine source directory based on OS
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    source_dir="hook-mac"
-    echo "🔍 Detected macOS, using macOS hooks"
+    SOURCE_DIR="$SCRIPT_DIR/hook-mac"
+    echo "🍎 macOS detected"
 else
-    source_dir="hook-win"
-    echo "🔍 Detected Windows, using Windows hooks"
+    SOURCE_DIR="$SCRIPT_DIR/hook-win"
+    echo "🪟 Windows detected"
 fi
-
-# Create hooks directory if it doesn't exist
-mkdir -p "$hooks_dir"
 
 echo "🔧 Installing Git hooks..."
 
-# Check if source directory exists
-if [ ! -d "$source_dir" ]; then
-    echo "❌ Error: Hook source directory '$source_dir' not found!"
-    echo "Please make sure you're running this script from the correct location"
-    echo "and that the '$source_dir' directory exists."
-    exit 1
-fi
-
-# Define hooks to install
-hook_files=("pre-commit" "commit-msg" "pre-push" "pre-rebase")
-
 # Install hooks
-failed=""
-for hook in "${hook_files[@]}"; do
-    source_file="$source_dir/$hook"
-    target_file="$hooks_dir/$hook"
+for hook in commit-msg pre-commit pre-push pre-rebase; do
+    src="$SOURCE_DIR/$hook"
+    dst="$HOOKS_DIR/$hook"
     
-    # Check if source file exists
-    if [ ! -f "$source_file" ]; then
-        failed="$failed $hook"
+    if [ ! -f "$src" ]; then
+        echo "❌ Missing hook: $hook"
         continue
     fi
     
-    # Copy and set permissions
-    cp "$source_file" "$target_file" 2>/dev/null && chmod +x "$target_file" 2>/dev/null || failed="$failed $hook"
-done
+    echo "📝 Installing $hook..."
+    
+    # Copy hook and handle errors
+    cp "$src" "$dst" || {
+        echo "❌ Failed to copy $hook"
+        continue
+    }
+    
+    # Fix line endings and set permissions
+    if [[ "$OSTYPE" != "darwin"* ]]; then
+        # For Windows: Remove CRLF and try multiple permission methods
+        sed -i 's/\r$//' "$dst" 2>/dev/null
+        
+        # Try multiple permission methods
+        chmod +x "$dst" 2>/dev/null || \
+        /c/Windows/System32/icacls.exe "$dst" //grant "${USERNAME}:RX" >/dev/null 2>&1
+        
+        # Ensure Git tracks the executable bit
+        git update-index --chmod=+x "$dst" 2>/dev/null
+    else
+        # For macOS: Simple permission setting
+        chmod 755 "$dst" 2>/dev/null
+    fi
 
-if [ ! -z "$failed" ]; then
-    echo "❌ Failed to install hooks:$failed"
-    echo "Please check that all required files exist in the $source_dir directory:"
-    for hook in "${hook_files[@]}"; do
-        if [ ! -f "$source_dir/$hook" ]; then
-            echo "  - Missing: $source_dir/$hook"
-        fi
-    done
-    exit 1
-fi
+    # Add to Git to track permissions
+    git add "$dst" >/dev/null 2>&1
+    
+    echo "✅ Installed: $hook"
+done
 
 # Display installation result
 echo
@@ -88,19 +92,13 @@ echo "• No pushes to protected branches"
 echo "• No force pushes"
 echo "• No rebase operations"
 echo "• Commit message format validation"
-    echo
-    echo "💡 To create a new feature:"
-    echo "  git checkout -b feature/your-feature"
-    echo "  git add ."
-    echo "  git commit -m \"type: your message\""
-    echo "  git push origin feature/your-feature"
-    echo
-    echo "⚠️  To bypass hooks in emergency situations:"
-    echo "  git commit --no-verify"
-    echo "  git push --no-verify"
-    echo
-else
-    echo
-    echo "❌ Installation failed! Please check the error messages above."
-    exit 1
-fi
+echo
+echo "💡 To create a new feature:"
+echo "  git checkout -b feature/your-feature"
+echo "  git add ."
+echo "  git commit -m \"type: your message\""
+echo "  git push origin feature/your-feature"
+echo
+echo "⚠️  To bypass hooks in emergency situations:"
+echo "  git commit --no-verify"
+echo "  git push --no-verify"
