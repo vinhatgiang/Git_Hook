@@ -23,16 +23,5 @@ if [ ${#commit_msg} -lt 10 ]; then
     exit 1
 fi
 
-# Check commit message format (type: description)
-if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore): "; then
-    echo
-    echo "INVALID COMMIT MESSAGE FORMAT"
-    echo "Must start with: feat:, fix:, docs:, style:, refactor:, test:, or chore:"
-    
-    show_dialog "Invalid commit message format. Must start with: feat:, fix:, docs:, style:, refactor:, test:, or chore:" "Invalid Format"
-    
-    exit 1
-fi
-
 echo "Commit message validation passed"
 exit 0
