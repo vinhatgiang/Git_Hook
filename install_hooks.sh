@@ -42,7 +42,7 @@ for hook in commit-msg pre-commit pre-push pre-rebase; do
     dst="$HOOKS_DIR/$hook"
     
     if [ ! -f "$src" ]; then
-        echo "❌ Missing hook: $hook"
+        echo "Missing hook: $hook"
         continue
     fi
     
@@ -50,7 +50,7 @@ for hook in commit-msg pre-commit pre-push pre-rebase; do
     
     # Copy hook and handle errors
     cp "$src" "$dst" || {
-        echo "❌ Failed to copy $hook"
+        echo "Failed to copy $hook"
         continue
     }
     
@@ -73,6 +73,9 @@ for hook in commit-msg pre-commit pre-push pre-rebase; do
     # Add to Git to track permissions
     git add "$dst" >/dev/null 2>&1
     
+    echo "✅ Installed: $hook"
+done
+
     echo "✅ Installed: $hook"
 done
 

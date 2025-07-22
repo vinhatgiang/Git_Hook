@@ -1,18 +1,27 @@
-@echo off
-setlocal enabledelayedexpansion
+#!/bin/bash
 
-REM Git Hook: pre-rebase
-REM Platform: Windows
-REM Purpose: Block all rebase operations
+# Git Hook: pre-rebase
+# Platform: Git Bash (Windows, macOS, Linux)
+# Purpose: Prevent rebase on protected branches
 
-REM Function to show Windows dialog
-set "SHOW_DIALOG=powershell -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show"
+show_dialog() {
+    msg="$1"
+    title="$2"
+    powershell.exe -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$msg', '$title')" > /dev/null
+}
 
-echo.
-echo REBASE OPERATION BLOCKED
-echo All rebase operations are prohibited for maintaining git history integrity.
-echo Please use merge instead of rebase.
+protected_branches=("main" "develop")
 
-%SHOW_DIALOG%('Rebase operation is blocked.\n\nThis action is prohibited for maintaining git history integrity.\n\nPlease:\n1. Use merge instead of rebase\n2. Create a Pull Request if needed\n3. Contact team lead if you need assistance', 'Rebase Operation Blocked', 'OK', 'Error')
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
 
-exit /b 1
+for branch in "${protected_branches[@]}"; do
+    if [[ "$current_branch" == "$branch" ]]; then
+        echo "❌ Rebase on $branch is blocked. Please use merge or create a feature branch."
+        show_dialog "Rebase on $branch is blocked.\nPlease use merge or create a feature branch." "Rebase Blocked"
+        exit 1
+    fi
+
+done
+
+echo "✅ Pre-rebase checks passed"
+exit 0
