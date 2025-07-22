@@ -1,0 +1,223 @@
+@echo off
+setlocal enabledelayedexpansion
+
+REM Git Hooks Installation Script
+REM Platform: Windows
+REM Purpose: Install all Git hooks with proper configuration
+
+title Git Hooks Installer - Windows
+
+echo.
+echo ╔══════════════════════════════════════════════════════════╗
+echo ║                    Git Hooks Installer                  ║
+echo ║                     Windows Version                     ║
+echo ╚══════════════════════════════════════════════════════════╝
+echo.
+
+REM Get script directory
+set "SCRIPT_DIR=%~dp0"
+if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
+REM Function to check if we're in a Git repository
+git rev-parse --git-dir >nul 2>&1
+if errorlevel 1 (
+    echo ❌ This directory is not a Git repository!
+    echo Please run this script from the root of your Git repository.
+    echo Or initialize a new Git repository with: git init
+    pause
+    exit /b 1
+)
+
+REM Check command line arguments
+if "%1"=="--help" goto show_help
+if "%1"=="-h" goto show_help
+if "%1"=="--test" goto test_hooks
+if "%1"=="--uninstall" goto uninstall_hooks
+
+REM Main installation process
+goto main_install
+
+:show_help
+echo Git Hooks Installation Script
+echo.
+echo Usage: %0 [OPTIONS]
+echo.
+echo Options:
+echo   --help, -h     Show this help message
+echo   --test         Test existing hooks without installation
+echo   --uninstall    Remove all installed hooks
+echo.
+echo This script installs Git hooks that protect your repository from:
+echo • Direct commits/pushes to main and develop branches
+echo • Force pushes and dangerous rebase operations
+echo • Invalid commit messages
+pause
+exit /b 0
+
+:test_hooks
+echo 🔧 Testing installed hooks...
+echo.
+
+set "hooks_dir=.git\hooks"
+set "all_working=true"
+
+REM Check pre-commit hook
+if exist "%hooks_dir%\pre-commit" (
+    echo ✅ pre-commit hook is installed
+) else (
+    echo ❌ pre-commit hook is missing
+    set "all_working=false"
+)
+
+REM Check pre-push hook  
+if exist "%hooks_dir%\pre-push" (
+    echo ✅ pre-push hook is installed
+) else (
+    echo ❌ pre-push hook is missing
+    set "all_working=false"
+)
+
+REM Check commit-msg hook
+if exist "%hooks_dir%\commit-msg" (
+    echo ✅ commit-msg hook is installed
+) else (
+    echo ❌ commit-msg hook is missing
+    set "all_working=false"
+)
+
+if "%all_working%"=="true" (
+    echo.
+    echo ✅ All hooks are properly installed and configured
+) else (
+    echo.
+    echo ❌ Some hooks are not properly configured
+)
+pause
+exit /b 0
+
+:uninstall_hooks
+echo 🔧 Removing installed hooks...
+
+if exist ".git\hooks\pre-commit" del ".git\hooks\pre-commit"
+if exist ".git\hooks\pre-push" del ".git\hooks\pre-push"
+if exist ".git\hooks\commit-msg" del ".git\hooks\commit-msg"
+
+echo ✅ All hooks have been removed
+pause
+exit /b 0
+
+:main_install
+REM Create hooks directory if it doesn't exist
+set "hooks_dir=.git\hooks"
+if not exist "%hooks_dir%" (
+    mkdir "%hooks_dir%"
+    echo ✅ Created hooks directory: %hooks_dir%
+)
+
+REM Backup existing hooks
+set "backup_dir=.git\hooks-backup-%date:~10,4%%date:~4,2%%date:~7,2%-%time:~0,2%%time:~3,2%%time:~6,2%"
+set "backup_dir=%backup_dir: =0%"
+if exist "%hooks_dir%\*" (
+    echo 🔧 Creating backup of existing hooks...
+    mkdir "%backup_dir%" 2>nul
+    xcopy "%hooks_dir%\*" "%backup_dir%\" /Y >nul 2>&1
+    echo ✅ Existing hooks backed up to: %backup_dir%
+)
+
+REM Install pre-commit hook
+echo 🔧 Installing pre-commit hook...
+if exist "%SCRIPT_DIR%\pre-commit.bat" (
+    copy "%SCRIPT_DIR%\pre-commit.bat" "%hooks_dir%\pre-commit" >nul
+    echo ✅ pre-commit hook installed successfully
+) else (
+    echo ⚠️  pre-commit hook source file not found: %SCRIPT_DIR%\pre-commit.bat
+)
+
+REM Install pre-push hook
+echo 🔧 Installing pre-push hook...
+if exist "%SCRIPT_DIR%\pre-push.bat" (
+    copy "%SCRIPT_DIR%\pre-push.bat" "%hooks_dir%\pre-push" >nul
+    echo ✅ pre-push hook installed successfully
+) else (
+    echo ⚠️  pre-push hook source file not found: %SCRIPT_DIR%\pre-push.bat
+)
+
+REM Install commit-msg hook
+echo 🔧 Installing commit-msg hook...
+if exist "%SCRIPT_DIR%\commit-msg.bat" (
+    copy "%SCRIPT_DIR%\commit-msg.bat" "%hooks_dir%\commit-msg" >nul
+    echo ✅ commit-msg hook installed successfully
+) else (
+    echo ⚠️  commit-msg hook source file not found: %SCRIPT_DIR%\commit-msg.bat
+)
+
+REM Test installation
+echo.
+echo 🔧 Testing installed hooks...
+set "all_working=true"
+
+if exist "%hooks_dir%\pre-commit" (
+    echo ✅ pre-commit hook is installed
+) else (
+    echo ❌ pre-commit hook is missing  
+    set "all_working=false"
+)
+
+if exist "%hooks_dir%\pre-push" (
+    echo ✅ pre-push hook is installed
+) else (
+    echo ❌ pre-push hook is missing
+    set "all_working=false"
+)
+
+if exist "%hooks_dir%\commit-msg" (
+    echo ✅ commit-msg hook is installed
+) else (
+    echo ❌ commit-msg hook is missing
+    set "all_working=false"
+)
+
+echo.
+if "%all_working%"=="true" (
+    goto show_success_summary
+) else (
+    echo ❌ Installation completed with errors. Please check the hooks manually.
+    pause
+    exit /b 1
+)
+
+:show_success_summary
+echo ╔══════════════════════════════════════════════════════════╗
+echo ║                   Installation Complete                 ║
+echo ╚══════════════════════════════════════════════════════════╝
+echo.
+echo 📋 Installed Hooks:
+echo • pre-commit   - Prevents commits to main/develop branches
+echo                 - Validates commit message format
+echo • pre-push     - Prevents pushes to main/develop branches
+echo                 - Blocks force pushes and detects rebases
+echo • commit-msg   - Validates commit message rules and format
+echo.
+echo 🛡️  Protection Rules Active:
+echo • ❌ Direct commits to main/master branches
+echo • ❌ Direct commits to develop/dev branches
+echo • ❌ Direct pushes to main/master branches
+echo • ❌ Direct pushes to develop/dev branches
+echo • ❌ Force pushes (--force, --force-with-lease)
+echo • ❌ Rebase operations on shared branches
+echo • ❌ Commit messages shorter than 10 characters
+echo • ❌ Commit messages not starting with capital letter
+echo.
+echo 💡 Recommended Workflow:
+echo 1. git checkout -b feature/your-feature
+echo 2. git add .
+echo 3. git commit -m "Add your feature description"
+echo 4. git push origin feature/your-feature
+echo 5. Create Pull Request for code review
+echo.
+echo 📖 For detailed documentation, see: README-vi.md
+echo.
+echo 🎉 Git hooks installation completed successfully!
+echo Your repository is now protected with comprehensive Git hooks.
+pause
+exit /b 0
