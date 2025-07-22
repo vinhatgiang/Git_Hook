@@ -45,4 +45,4 @@ Update installation guide
 - Không thể commit trực tiếp vào `main` hoặc `develop`  
 - Không thể force push
 - Không thể thực hiện rebase
-- Commit message phải có ít nhất 10 ký tự
+- Commit message phải có ít nhất 10  ký tự
