@@ -13,7 +13,7 @@ Bộ Git hooks này giúp đảm bảo quy tắc phát triển và chất lượ
    - Độ dài tối thiểu: 10 ký tự
    - Định dạng bắt buộc: `<type>: <description>`
    - Các type hợp lệ: feat, fix, docs, style, refactor, test, chore
-   - Ví dụ: `feat: thêm tính năng đăng nhập`
+   - Ví dụ: `feat: thêm tính năng đăng  nhập`
 
 3. **Bảo Vệ Lịch Sử Git**
    - Chặn force push
