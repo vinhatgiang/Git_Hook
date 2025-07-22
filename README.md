@@ -7,7 +7,7 @@ Bộ Git hooks tự động để bảo vệ repository và đảm bảo quy t�
 ✅ **Chặn commit/push vào branch chính** (main, develop)  
 ✅ **Chặn force push**  
 ✅ **Chặn rebase operations**  
-✅ **Kiểm tra độ dài commit message** (tối thiểu 10 ký tự)  
+✅ **Kiểm tra độ dài commit message** (tối thiểu 10 ký tự)   
 
 ## Cài đặt
 
