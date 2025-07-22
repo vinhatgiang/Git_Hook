@@ -20,10 +20,27 @@ fi
 # Set hooks directory
 hooks_dir=".git/hooks"
 
+# Determine OS and set source directory
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    source_dir="hook-mac"
+    echo "🔍 Detected macOS, using macOS hooks"
+else
+    source_dir="hook-win"
+    echo "🔍 Detected Windows, using Windows hooks"
+fi
+
 # Create hooks directory if it doesn't exist
 mkdir -p "$hooks_dir"
 
 echo "🔧 Installing Git hooks..."
+
+# Check if source directory exists
+if [ ! -d "$source_dir" ]; then
+    echo "❌ Error: Hook source directory '$source_dir' not found!"
+    echo "Please make sure you're running this script from the correct location"
+    echo "and that the '$source_dir' directory exists."
+    exit 1
+fi
 
 # Define hooks to install
 hook_files=("pre-commit" "commit-msg" "pre-push" "pre-rebase")
@@ -31,7 +48,7 @@ hook_files=("pre-commit" "commit-msg" "pre-push" "pre-rebase")
 # Install hooks
 failed=""
 for hook in "${hook_files[@]}"; do
-    source_file="hook-win/$hook"
+    source_file="$source_dir/$hook"
     target_file="$hooks_dir/$hook"
     
     # Check if source file exists
@@ -46,6 +63,12 @@ done
 
 if [ ! -z "$failed" ]; then
     echo "❌ Failed to install hooks:$failed"
+    echo "Please check that all required files exist in the $source_dir directory:"
+    for hook in "${hook_files[@]}"; do
+        if [ ! -f "$source_dir/$hook" ]; then
+            echo "  - Missing: $source_dir/$hook"
+        fi
+    done
     exit 1
 fi
 
