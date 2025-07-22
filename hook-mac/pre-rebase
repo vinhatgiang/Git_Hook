@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# Git Hook: pre-rebase
+# Platform: macOS
+# Purpose: Prevent rebase operations for safer git workflow
+
+# Function to show macOS dialog
+show_dialog() {
+    osascript -e "display dialog \"$1\" buttons {\"OK\"} default button \"OK\" with icon caution with title \"$2\""
+}
+
+# Get current branch name
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+# Get upstream branch (first argument passed to pre-rebase)
+upstream_branch="$1"
+
+# Check if rebasing onto protected branches
+if [ "$upstream_branch" = "main" ]; then
+    echo
+    echo "REBASE ONTO MAIN BRANCH BLOCKED"
+    echo "You are trying to rebase onto the main branch."
+    echo "This action is prohibited for maintaining a clean git history."
+    
+    show_dialog "Rebase onto main branch is blocked.\n\nThis action is prohibited for maintaining a clean git history.\n\nRecommended actions:\n1. Use merge instead of rebase\n2. Create a Pull Request\n3. Get approval from team lead" "Rebase Operation Blocked"
+    
+    exit 1
+fi
+
+if [ "$upstream_branch" = "develop" ]; then
+    echo
+    echo "REBASE ONTO DEVELOP BRANCH BLOCKED"
+    echo "You are trying to rebase onto the develop branch."
+    echo "This action is prohibited for maintaining a clean git history."
+    
+    show_dialog "Rebase onto develop branch is blocked.\n\nThis action is prohibited for maintaining a clean git history.\n\nRecommended actions:\n1. Use merge instead of rebase\n2. Create a Pull Request\n3. Get approval from team lead" "Rebase Operation Blocked"
+    
+    exit 1
+fi
+
+# Block rebase if current branch is protected
+if [ "$current_branch" = "main" ]; then
+    echo
+    echo "REBASE OF MAIN BRANCH BLOCKED"
+    echo "You are trying to rebase the main branch."
+    echo "This action is prohibited for maintaining git history integrity."
+    
+    show_dialog "Rebase of main branch is blocked.\n\nThis action is prohibited for maintaining git history integrity.\n\nRecommended actions:\n1. Use merge instead of rebase\n2. Create a feature branch\n3. Get approval from team lead" "Rebase Operation Blocked"
+    
+    exit 1
+fi
+
+if [ "$current_branch" = "develop" ]; then
+    echo
+    echo "REBASE OF DEVELOP BRANCH BLOCKED"
+    echo "You are trying to rebase the develop branch."
+    echo "This action is prohibited for maintaining git history integrity."
+    
+    show_dialog "Rebase of develop branch is blocked.\n\nThis action is prohibited for maintaining git history integrity.\n\nRecommended actions:\n1. Use merge instead of rebase\n2. Create a feature branch\n3. Get approval from team lead" "Rebase Operation Blocked"
+    
+    exit 1
+fi
+
+echo "✅ Pre-rebase checks passed"
+exit 0

@@ -12,16 +12,10 @@ REM Check for force push by examining command line arguments
 echo %* | findstr /c:"--force" /c:"--force-with-lease" /c:"-f" >nul
 if not errorlevel 1 (
     echo.
-    echo ❌ FORCE PUSH BLOCKED
+    echo FORCE PUSH BLOCKED
     echo Force push detected and blocked for repository safety.
     echo Force pushes can overwrite history and cause data loss.
-    echo.
-    echo Safer alternatives:
-    echo 1. Resolve conflicts properly: git pull --rebase
-    echo 2. Create a new branch if needed
-    echo 3. Coordinate with your team before force pushing
-    echo 4. If absolutely necessary, use: git push --force-with-lease
-    
+
     %SHOW_DIALOG%('Force push detected and blocked for repository safety.\n\nForce pushes can overwrite history and cause data loss.\n\nSafer alternatives:\n1. Resolve conflicts properly\n2. Create a new branch if needed\n3. Coordinate with your team', 'Force Push Blocked', 'OK', 'Error')
     
     exit /b 1
@@ -47,90 +41,24 @@ for /f "tokens=1,2,3,4" %%a in ('more') do (
     REM Check if pushing to protected branches
     if "!remote_branch!"=="main" (
         echo.
-        echo ❌ PUSH TO MAIN BRANCH BLOCKED
+        echo PUSH TO MAIN BRANCH BLOCKED
         echo You are trying to push directly to the '!remote_branch!' branch.
         echo This action is prohibited for code safety and review process.
-        echo.
-        echo Recommended workflow:
-        echo 1. Push to a feature branch: git push origin feature/your-feature
-        echo 2. Create a Pull Request for code review
-        echo 3. Merge through PR after approval
         
         %SHOW_DIALOG%('You are trying to push directly to the main branch.\n\nThis action is prohibited for code safety.\n\nPlease:\n1. Push to a feature branch\n2. Create a Pull Request\n3. Merge through PR after approval', 'Push to Main Branch Blocked', 'OK', 'Error')
         
         exit /b 1
     )
     
-    if "!remote_branch!"=="master" (
-        echo.
-        echo ❌ PUSH TO MASTER BRANCH BLOCKED
-        echo You are trying to push directly to the '!remote_branch!' branch.
-        echo This action is prohibited for code safety and review process.
-        echo.
-        echo Recommended workflow:
-        echo 1. Push to a feature branch: git push origin feature/your-feature
-        echo 2. Create a Pull Request for code review
-        echo 3. Merge through PR after approval
-        
-        %SHOW_DIALOG%('You are trying to push directly to the master branch.\n\nThis action is prohibited for code safety.\n\nPlease:\n1. Push to a feature branch\n2. Create a Pull Request\n3. Merge through PR after approval', 'Push to Master Branch Blocked', 'OK', 'Error')
-        
-        exit /b 1
-    )
-    
     if "!remote_branch!"=="develop" (
         echo.
-        echo ❌ PUSH TO DEVELOP BRANCH BLOCKED
+        echo PUSH TO DEVELOP BRANCH BLOCKED
         echo You are trying to push directly to the '!remote_branch!' branch.
         echo This action is prohibited for development workflow integrity.
-        echo.
-        echo Recommended workflow:
-        echo 1. Push to a feature branch: git push origin feature/your-feature
-        echo 2. Create a Pull Request to merge into develop
-        echo 3. Merge through PR after review
         
         %SHOW_DIALOG%('You are trying to push directly to the develop branch.\n\nThis action is prohibited for development workflow.\n\nPlease:\n1. Push to a feature branch\n2. Create a Pull Request\n3. Merge through PR after review', 'Push to Develop Branch Blocked', 'OK', 'Error')
         
         exit /b 1
-    )
-    
-    if "!remote_branch!"=="dev" (
-        echo.
-        echo ❌ PUSH TO DEV BRANCH BLOCKED
-        echo You are trying to push directly to the '!remote_branch!' branch.
-        echo This action is prohibited for development workflow integrity.
-        echo.
-        echo Recommended workflow:
-        echo 1. Push to a feature branch: git push origin feature/your-feature
-        echo 2. Create a Pull Request to merge into develop
-        echo 3. Merge through PR after review
-        
-        %SHOW_DIALOG%('You are trying to push directly to the dev branch.\n\nThis action is prohibited for development workflow.\n\nPlease:\n1. Push to a feature branch\n2. Create a Pull Request\n3. Merge through PR after review', 'Push to Dev Branch Blocked', 'OK', 'Error')
-        
-        exit /b 1
-    )
-    
-    REM Check for potential rebase (simplified detection on Windows)
-    if "!local_sha!" neq "0000000000000000000000000000000000000000" if "!remote_sha!" neq "0000000000000000000000000000000000000000" (
-        REM Use git merge-base to detect non-fast-forward pushes
-        git merge-base --is-ancestor "!remote_sha!" "!local_sha!" 2>nul
-        if errorlevel 1 (
-            git merge-base "!local_sha!" "!remote_sha!" >nul 2>&1
-            if not errorlevel 1 (
-                echo.
-                echo ❌ POTENTIAL REBASE DETECTED
-                echo This push appears to contain rebased commits.
-                echo Rebasing can rewrite history and cause collaboration issues.
-                echo.
-                echo Safer alternatives:
-                echo 1. Use merge commits: git merge
-                echo 2. Create a new branch for rebased changes
-                echo 3. Coordinate with team before rebasing shared branches
-                
-                %SHOW_DIALOG%('This push appears to contain rebased commits.\n\nRebasing can rewrite history and cause collaboration issues.\n\nSafer alternatives:\n1. Use merge commits\n2. Create a new branch\n3. Coordinate with team', 'Potential Rebase Detected', 'OK', 'Error')
-                
-                exit /b 1
-            )
-        )
     )
     
     :continue

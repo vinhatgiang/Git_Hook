@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Git Hook: pre-push
+# Platform: macOS
+# Purpose: Prevent pushes to main and develop branches, detect force pushes and rebases
+
+# Function to show macOS dialog
+show_dialog() {
+    osascript -e "display dialog \"$1\" buttons {\"OK\"} default button \"OK\" with icon caution with title \"$2\""
+}
+
+# Check for force push by examining command line arguments
+if echo "$*" | grep -q -- "--force\|--force-with-lease\|-f"; then
+    echo
+    echo "FORCE PUSH BLOCKED"
+    echo "Force push detected and blocked for repository safety."
+    echo "Force pushes can overwrite history and cause data loss."
+
+    show_dialog "Force push detected and blocked for repository safety.\n\nForce pushes can overwrite history and cause data loss.\n\nSafer alternatives:\n1. Resolve conflicts properly\n2. Create a new branch if needed\n3. Coordinate with your team" "Force Push Blocked"
+    
+    exit 1
+fi
+
+# Read push information from stdin and process each line
+while read local_ref local_sha remote_ref remote_sha; do
+    # Extract branch name from remote ref (refs/heads/branch-name)
+    if [[ "$remote_ref" =~ ^refs/heads/ ]]; then
+        remote_branch=${remote_ref#refs/heads/}
+        
+        # Check if pushing to protected branches
+        if [ "$remote_branch" = "main" ]; then
+            echo
+            echo "PUSH TO MAIN BRANCH BLOCKED"
+            echo "You are trying to push directly to the '$remote_branch' branch."
+            echo "This action is prohibited for code safety and review process."
+            
+            show_dialog "You are trying to push directly to the main branch.\n\nThis action is prohibited for code safety.\n\nPlease:\n1. Push to a feature branch\n2. Create a Pull Request\n3. Merge through PR after approval" "Push to Main Branch Blocked"
+            
+            exit 1
+        fi
+        
+        if [ "$remote_branch" = "develop" ]; then
+            echo
+            echo "PUSH TO DEVELOP BRANCH BLOCKED"
+            echo "You are trying to push directly to the '$remote_branch' branch."
+            echo "This action is prohibited for development workflow integrity."
+            
+            show_dialog "You are trying to push directly to the develop branch.\n\nThis action is prohibited for development workflow.\n\nPlease:\n1. Push to a feature branch\n2. Create a Pull Request\n3. Merge through PR after review" "Push to Develop Branch Blocked"
+            
+            exit 1
+        fi
+    fi
+done
+
+echo "✅ Pre-push checks passed"
+exit 0

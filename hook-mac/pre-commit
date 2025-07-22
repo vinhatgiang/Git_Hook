@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Git Hook: pre-commit
+# Platform: macOS
+# Purpose: Prevent commits to main and develop branches
+
+# Function to show macOS dialog
+show_dialog() {
+    osascript -e "display dialog \"$1\" buttons {\"OK\"} default button \"OK\" with icon caution with title \"$2\""
+}
+
+# Get current branch name
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+# Check if we're on protected branches
+if [ "$current_branch" = "main" ]; then
+    echo
+    echo "COMMIT TO MAIN BRANCH BLOCKED"
+    echo "You are trying to commit directly to the main branch."
+    echo "This action is prohibited for code safety and review process."
+    
+    show_dialog "You are trying to commit directly to the main branch.\n\nThis action is prohibited for code safety.\n\nPlease:\n1. Create a feature branch\n2. Commit to that branch\n3. Create a Pull Request" "Commit to Main Branch Blocked"
+    
+    exit 1
+fi
+
+if [ "$current_branch" = "develop" ]; then
+    echo
+    echo "COMMIT TO DEVELOP BRANCH BLOCKED"
+    echo "You are trying to commit directly to the develop branch."
+    echo "This action is prohibited for development workflow integrity."
+    
+    show_dialog "You are trying to commit directly to the develop branch.\n\nThis action is prohibited for development workflow.\n\nPlease:\n1. Create a feature branch\n2. Commit to that branch\n3. Create a Pull Request" "Commit to Develop Branch Blocked"
+    
+    exit 1
+fi
+
+# Check for rebase in progress
+if [ -d "$(git rev-parse --git-dir)/rebase-merge" ]; then
+    echo
+    echo "REBASE OPERATION DETECTED"
+    echo "A rebase operation is in progress."
+    echo "This action is prohibited for maintaining commit history integrity."
+    
+    show_dialog "A rebase operation is in progress.\n\nThis action is prohibited for maintaining commit history integrity.\n\nPlease:\n1. Complete or abort the rebase\n2. Resolve any conflicts\n3. Consider using merge instead" "Rebase Operation Detected"
+    
+    exit 1
+fi
+
+echo "✅ Pre-commit checks passed"
+exit 0

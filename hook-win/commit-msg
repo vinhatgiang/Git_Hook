@@ -1,0 +1,40 @@
+@echo off
+setlocal enabledelayedexpansion
+
+REM Git Hook: commit-msg
+REM Platform: Windows
+REM Purpose: Enforce commit message rules
+
+REM Function to show Windows dialog
+set "SHOW_DIALOG=powershell -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show"
+
+REM Read commit message from file
+set /p msg=<%1
+
+REM Check minimum length (10 characters)
+if "!msg:~10!"=="" (
+    echo.
+    echo COMMIT MESSAGE TOO SHORT
+    echo Your commit message must be at least 10 characters long.
+    echo Current message: !msg!
+    
+    %SHOW_DIALOG%('Your commit message is too short (minimum 10 characters).\n\nCommit Message Rules:\n1. Start with type: feat, fix, docs, style, refactor, test, chore\n2. Example: feat: add login feature\n3. Minimum 10 characters\n4. Be descriptive and clear\n\nCurrent message: !msg!', 'Invalid Commit Message', 'OK', 'Error')
+    
+    exit /b 1
+)
+
+REM Check commit message format (type: description)
+echo !msg! | findstr /r /c:"^feat: " /c:"^fix: " /c:"^docs: " /c:"^style: " /c:"^refactor: " /c:"^test: " /c:"^chore: " >nul
+if errorlevel 1 (
+    echo.
+    echo INVALID COMMIT MESSAGE FORMAT
+    echo Your commit message must start with one of: feat:, fix:, docs:, style:, refactor:, test:, chore:
+    echo Current message: !msg!
+    
+    %SHOW_DIALOG%('Invalid commit message format.\n\nCommit Message Rules:\n1. Start with type: feat, fix, docs, style, refactor, test, chore\n2. Example: feat: add login feature\n3. Minimum 10 characters\n4. Be descriptive and clear\n\nCurrent message: !msg!', 'Invalid Commit Message Format', 'OK', 'Error')
+    
+    exit /b 1
+)
+
+echo ✅ Commit message validation passed
+exit /b 0

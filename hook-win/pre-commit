@@ -1,0 +1,50 @@
+@echo off
+setlocal enabledelayedexpansion
+
+REM Git Hook: pre-commit
+REM Platform: Windows
+REM Purpose: Prevent commits to main and develop branches
+
+REM Function to show Windows dialog
+set "SHOW_DIALOG=powershell -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show"
+
+REM Get current branch name
+for /f "tokens=*" %%a in ('git symbolic-ref --short HEAD 2^>nul') do set "current_branch=%%a"
+
+REM Check if we're on protected branches
+if "!current_branch!"=="main" (
+    echo.
+    echo COMMIT TO MAIN BRANCH BLOCKED
+    echo You are trying to commit directly to the main branch.
+    echo This action is prohibited for code safety and review process.
+    
+    %SHOW_DIALOG%('You are trying to commit directly to the main branch.\n\nThis action is prohibited for code safety.\n\nPlease:\n1. Create a feature branch\n2. Commit to that branch\n3. Create a Pull Request', 'Commit to Main Branch Blocked', 'OK', 'Error')
+    
+    exit /b 1
+)
+
+if "!current_branch!"=="develop" (
+    echo.
+    echo COMMIT TO DEVELOP BRANCH BLOCKED
+    echo You are trying to commit directly to the develop branch.
+    echo This action is prohibited for development workflow integrity.
+    
+    %SHOW_DIALOG%('You are trying to commit directly to the develop branch.\n\nThis action is prohibited for development workflow.\n\nPlease:\n1. Create a feature branch\n2. Commit to that branch\n3. Create a Pull Request', 'Commit to Develop Branch Blocked', 'OK', 'Error')
+    
+    exit /b 1
+)
+
+REM Check for rebase in progress
+if exist "%~dp0..\.git\rebase-merge" (
+    echo.
+    echo REBASE OPERATION DETECTED
+    echo A rebase operation is in progress.
+    echo This action is prohibited for maintaining commit history integrity.
+    
+    %SHOW_DIALOG%('A rebase operation is in progress.\n\nThis action is prohibited for maintaining commit history integrity.\n\nPlease:\n1. Complete or abort the rebase\n2. Resolve any conflicts\n3. Consider using merge instead', 'Rebase Operation Detected', 'OK', 'Error')
+    
+    exit /b 1
+)
+
+echo ✅ Pre-commit checks passed
+exit /b 0

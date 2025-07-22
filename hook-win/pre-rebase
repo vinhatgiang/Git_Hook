@@ -1,0 +1,64 @@
+@echo off
+setlocal enabledelayedexpansion
+
+REM Git Hook: pre-rebase
+REM Platform: Windows
+REM Purpose: Prevent rebase operations for safer git workflow
+
+REM Function to show Windows dialog
+set "SHOW_DIALOG=powershell -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show"
+
+REM Get current branch name
+for /f "tokens=*" %%a in ('git symbolic-ref --short HEAD 2^>nul') do set "current_branch=%%a"
+
+REM Get upstream branch (first argument passed to pre-rebase)
+set "upstream_branch=%1"
+
+REM Check if rebasing onto protected branches
+if "%upstream_branch%"=="main" (
+    echo.
+    echo REBASE ONTO MAIN BRANCH BLOCKED
+    echo You are trying to rebase onto the main branch.
+    echo This action is prohibited for maintaining a clean git history.
+    
+    %SHOW_DIALOG%('Rebase onto main branch is blocked.\n\nThis action is prohibited for maintaining a clean git history.\n\nRecommended actions:\n1. Use merge instead of rebase\n2. Create a Pull Request\n3. Get approval from team lead', 'Rebase Operation Blocked', 'OK', 'Error')
+    
+    exit /b 1
+)
+
+if "%upstream_branch%"=="develop" (
+    echo.
+    echo REBASE ONTO DEVELOP BRANCH BLOCKED
+    echo You are trying to rebase onto the develop branch.
+    echo This action is prohibited for maintaining a clean git history.
+    
+    %SHOW_DIALOG%('Rebase onto develop branch is blocked.\n\nThis action is prohibited for maintaining a clean git history.\n\nRecommended actions:\n1. Use merge instead of rebase\n2. Create a Pull Request\n3. Get approval from team lead', 'Rebase Operation Blocked', 'OK', 'Error')
+    
+    exit /b 1
+)
+
+REM Block rebase if current branch is protected
+if "!current_branch!"=="main" (
+    echo.
+    echo REBASE OF MAIN BRANCH BLOCKED
+    echo You are trying to rebase the main branch.
+    echo This action is prohibited for maintaining git history integrity.
+    
+    %SHOW_DIALOG%('Rebase of main branch is blocked.\n\nThis action is prohibited for maintaining git history integrity.\n\nRecommended actions:\n1. Use merge instead of rebase\n2. Create a feature branch\n3. Get approval from team lead', 'Rebase Operation Blocked', 'OK', 'Error')
+    
+    exit /b 1
+)
+
+if "!current_branch!"=="develop" (
+    echo.
+    echo REBASE OF DEVELOP BRANCH BLOCKED
+    echo You are trying to rebase the develop branch.
+    echo This action is prohibited for maintaining git history integrity.
+    
+    %SHOW_DIALOG%('Rebase of develop branch is blocked.\n\nThis action is prohibited for maintaining git history integrity.\n\nRecommended actions:\n1. Use merge instead of rebase\n2. Create a feature branch\n3. Get approval from team lead', 'Rebase Operation Blocked', 'OK', 'Error')
+    
+    exit /b 1
+)
+
+echo ✅ Pre-rebase checks passed
+exit /b 0

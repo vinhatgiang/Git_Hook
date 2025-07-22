@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# Git Hook: commit-msg
+# Platform: macOS
+# Purpose: Enforce commit message rules
+
+# Function to show macOS dialog
+show_dialog() {
+    osascript -e "display dialog \"$1\" buttons {\"OK\"} default button \"OK\" with icon caution with title \"$2\""
+}
+
+# Read commit message from file
+msg=$(cat "$1")
+
+# Check minimum length (10 characters)
+if [ ${#msg} -lt 10 ]; then
+    echo
+    echo "COMMIT MESSAGE TOO SHORT"
+    echo "Your commit message must be at least 10 characters long."
+    echo "Current message: $msg"
+    
+    show_dialog "Your commit message is too short (minimum 10 characters).\n\nCommit Message Rules:\n1. Start with type: feat, fix, docs, style, refactor, test, chore\n2. Example: feat: add login feature\n3. Minimum 10 characters\n4. Be descriptive and clear\n\nCurrent message: $msg" "Invalid Commit Message"
+    
+    exit 1
+fi
+
+# Check commit message format (type: description)
+if ! echo "$msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore): "; then
+    echo
+    echo "INVALID COMMIT MESSAGE FORMAT"
+    echo "Your commit message must start with one of: feat:, fix:, docs:, style:, refactor:, test:, chore:"
+    echo "Current message: $msg"
+    
+    show_dialog "Invalid commit message format.\n\nCommit Message Rules:\n1. Start with type: feat, fix, docs, style, refactor, test, chore\n2. Example: feat: add login feature\n3. Minimum 10 characters\n4. Be descriptive and clear\n\nCurrent message: $msg" "Invalid Commit Message Format"
+    
+    exit 1
+fi
+
+echo "✅ Commit message validation passed"
+exit 0
