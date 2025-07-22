@@ -10,7 +10,9 @@ commit_msg=$(cat "$commit_msg_file")
 show_dialog() {
     msg="$1"
     title="$2"
-    powershell.exe -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$msg', '$title')" > /dev/null
+    # Sử dụng \r\n để xuống dòng đúng trong MessageBox
+    msg_escaped=$(echo "$msg" | sed ':a;N;$!ba;s/\n/\r\n/g')
+    powershell.exe -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$msg_escaped', '$title')" > /dev/null
 }
 
 # Check minimum length (10 characters)
@@ -18,14 +20,6 @@ if [ ${#commit_msg} -lt 10 ]; then
     echo "❌ Commit message is too short (minimum 10 characters)."
     echo "Your message: $commit_msg"
     show_dialog "Commit message is too short (minimum 10 characters).\nYour message: $commit_msg" "Commit Message Error"
-    exit 1
-fi
-
-# Check commit message format (type: description)
-if ! echo "$commit_msg" | grep -Eq '^(feat|fix|docs|style|refactor|test|chore): '; then
-    echo "❌ Commit message must start with type: (feat|fix|docs|style|refactor|test|chore): "
-    echo "Your message: $commit_msg"
-    show_dialog "Commit message must start with type: (feat|fix|docs|style|refactor|test|chore):\nYour message: $commit_msg" "Commit Message Error"
     exit 1
 fi
 

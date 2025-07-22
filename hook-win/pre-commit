@@ -7,7 +7,8 @@
 show_dialog() {
     msg="$1"
     title="$2"
-    powershell.exe -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$msg', '$title')" > /dev/null
+    msg_escaped=$(echo "$msg" | sed ':a;N;$!ba;s/\n/\r\n/g')
+    powershell.exe -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$msg_escaped', '$title')" > /dev/null
 }
 
 current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
