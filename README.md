@@ -24,28 +24,56 @@ Bộ Git hooks này giúp đảm bảo quy tắc phát triển và chất lượ
 ## Cài Đặt Git Hooks
 
 ### Yêu Cầu Hệ Thống
-- **Windows**: Windows 10 trở lên
-- **macOS**: macOS 10.15 trở lên
+- **Windows**: Git Bash
+- **macOS**: Terminal
 - **Git**: Phiên bản 2.30.0 trở lên
 
-### Cài Đặt Trên Windows
-1. Copy toàn bộ thư mục `hook-win` vào thư mục gốc của dự án Git
-2. Mở Command Prompt hoặc PowerShell
+### Cấu Trúc Thư Mục
+```
+Git_Hook/
+├── hook-templates/       # Thư mục chứa các file hook mẫu
+│   ├── pre-commit       # Hook ngăn commit vào nhánh protected
+│   ├── pre-commit-warning # Hook cảnh báo khi commit
+│   ├── commit-msg       # Hook kiểm tra format commit message
+│   ├── pre-push        # Hook ngăn push vào nhánh protected
+│   └── pre-rebase      # Hook ngăn rebase
+├── install_hooks.sh    # Script cài đặt cho cả Windows/macOS
+└── README.md          # Tài liệu hướng dẫn
+```
+
+### Cách Cài Đặt
+
+#### Windows (Git Bash)
+1. Copy toàn bộ thư mục Git_Hook vào dự án của bạn
+2. Mở Git Bash trong thư mục dự án
 3. Chạy lệnh:
-   ```cmd
-   cd đường-dẫn-tới-dự-án-git
-   .\hook-win\install_hooks.bat
+   ```bash
+   chmod +x ./install_hooks.sh
+   ./install_hooks.sh
    ```
 
-### Cài Đặt Trên macOS
-1. Copy toàn bộ thư mục `hook-mac` vào thư mục gốc của dự án Git
-2. Mở Terminal
-3. Chạy các lệnh:
+#### macOS
+1. Copy toàn bộ thư mục Git_Hook vào dự án của bạn
+2. Mở Terminal trong thư mục dự án
+3. Chạy lệnh:
    ```bash
-   cd đường-dẫn-tới-dự-án-git
-   chmod +x ./hook-mac/install_hooks
-   ./hook-mac/install_hooks
+   chmod +x ./install_hooks.sh
+   ./install_hooks.sh
    ```
+
+### Chế Độ Cài Đặt
+Script cài đặt cung cấp hai chế độ:
+
+1. **Strict Mode (Nghiêm ngặt)**
+   - Chặn hoàn toàn các thao tác không an toàn
+   - Ngăn commit/push vào nhánh protected
+   - Ngăn force push và rebase
+   - Bắt buộc format commit message
+
+2. **Warning Mode (Chỉ cảnh báo)**
+   - Cho phép nhưng cảnh báo về các thao tác không an toàn
+   - Hiển thị cảnh báo khi commit/push vào nhánh protected
+   - Vẫn bắt buộc format commit message
 
 ### Kiểm Tra Cài Đặt
 Script sẽ tự động:
