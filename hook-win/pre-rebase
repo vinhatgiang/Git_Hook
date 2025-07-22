@@ -7,8 +7,7 @@
 show_dialog() {
     msg="$1"
     title="$2"
-    msg_escaped=$(echo "$msg" | sed ':a;N;$!ba;s/\n/\r\n/g')
-    powershell.exe -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$msg_escaped', '$title')" > /dev/null
+    powershell.exe -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$msg', '$title')" > /dev/null
 }
 
 protected_branches=("main" "develop")
@@ -18,7 +17,7 @@ current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
 for branch in "${protected_branches[@]}"; do
     if [[ "$current_branch" == "$branch" ]]; then
         echo "❌ Rebase on $branch is blocked. Please use merge or create a feature branch."
-        show_dialog "Rebase on $branch is blocked.\nPlease use merge or create a feature branch." "Rebase Blocked"
+        show_dialog "Rebase on $branch is blocked. Please use merge or create a feature branch." "Rebase Blocked"
         exit 1
     fi
 
