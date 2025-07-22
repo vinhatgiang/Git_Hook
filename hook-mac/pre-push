@@ -9,55 +9,71 @@ show_dialog() {
     osascript -e "display dialog \"$1\" buttons {\"OK\"} default button \"OK\" with icon caution with title \"$2\""
 }
 
-# Check for force push by examining command line arguments
-if echo "$*" | grep -q -- "--force\|--force-with-lease\|-f"; then
-    echo
-    echo "FORCE PUSH BLOCKED"
-    echo "Force push is not allowed."
-
-    show_dialog "Force push is blocked.\n\nThis action is not allowed." "Force Push Blocked"
+# Function to detect non-fast-forward push (force push detection)
+detect_non_fast_forward_push() {
+    local local_sha="$1"
+    local remote_sha="$2"
+    local remote_ref="$3"
+    local remote_branch="${remote_ref#refs/heads/}"
     
-    exit 1
-fi
+    # Skip check for branch deletion (local_sha is all zeros)
+    if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+        return 1
+    fi
+    
+    # For new branches (remote_sha is all zeros), allow push
+    if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+        return 1  # New branch is OK
+    fi
+    
+    # Check if this is a fast-forward push
+    # If remote commit is NOT reachable from local commit, it's non-fast-forward
+    if ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
+        return 0  # Non-fast-forward push detected
+    fi
+    
+    return 1  # Fast-forward push is OK
+}
 
 # Check for rebase in commit history being pushed
 check_for_rebase_in_history() {
     local local_sha="$1"
     local remote_sha="$2"
     
-    # If remote_sha is all zeros, this is a new branch
-    if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
-        # Check last 10 commits for rebase patterns
-        if git log --oneline -10 "$local_sha" | grep -q "^[a-f0-9]\{7\} [A-Z]"; then
-            return 0
-        fi
-    else
-        # Check commits between remote and local for rebase patterns
-        if git log --oneline "$remote_sha..$local_sha" | grep -q "^[a-f0-9]\{7\} [A-Z]"; then
-            return 0
-        fi
-    fi
+    # Disable rebase detection for now as it has false positives
+    # TODO: Implement more accurate rebase detection if needed
     return 1
 }
 
 # Read push information from stdin and process each line
 while read local_ref local_sha remote_ref remote_sha; do
-    # Check for rebase in history
-    if check_for_rebase_in_history "$local_sha" "$remote_sha"; then
-        echo
-        echo "REBASE DETECTED IN PUSH HISTORY"
-        echo "The commits contain evidence of rebase operations."
-        echo "Rebase is prohibited in this repository."
-        echo "Push blocked."
-        
-        show_dialog "Rebase detected in push history.\n\nRebase is prohibited in this repository." "Push Blocked"
-        
-        exit 1
-    fi
-    
     # Extract branch name from remote ref (refs/heads/branch-name)
     if [[ "$remote_ref" =~ ^refs/heads/ ]]; then
         remote_branch=${remote_ref#refs/heads/}
+        
+        # Check for non-fast-forward push (this catches ALL force pushes)
+        if detect_non_fast_forward_push "$local_sha" "$remote_sha" "$remote_ref"; then
+            echo
+            echo "FORCE UPDATE BLOCKED"
+            echo "Force update is not allowed."
+            
+            show_dialog "Force update blocked.\n\nForce update is not allowed." "Force Update Blocked"
+            
+            exit 1
+        fi
+        
+        # Check for rebase in history
+        if check_for_rebase_in_history "$local_sha" "$remote_sha"; then
+            echo
+            echo "REBASE DETECTED IN PUSH HISTORY"
+            echo "The commits contain evidence of rebase operations."
+            echo "Rebase is prohibited in this repository."
+            echo "Push blocked."
+            
+            show_dialog "Rebase detected in push history.\n\nRebase is prohibited in this repository." "Push Blocked"
+            
+            exit 1
+        fi
         
         # Check if pushing to protected branches
         if [ "$remote_branch" = "main" ]; then
