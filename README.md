@@ -42,7 +42,7 @@ Update installation guide
 ## Lưu ý
 
 - Hooks sẽ hiển thị thông báo lỗi và dialog cảnh báo
-- Không thể commit trực tiếp vào `main` hoặc `develop`  
+- Không thể commit trực tiếp vào `main`  hoặc `develop`  
 - Không thể force push
 - Không thể thực hiện rebase
 - Commit message phải có ít nhất 10 ký tự
