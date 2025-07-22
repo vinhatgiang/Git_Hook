@@ -13,7 +13,7 @@ Bộ Git hooks tự động để bảo vệ repository và đảm bảo quy t�
 
 ### Windows (Git Bash)
 
-1. Mở **Git Bash** trong  thư mục project
+1. Mở **Git Bash** trong  thư mục project 
 2. Chạy lệnh:
 ```bash
 bash install_hooks.sh
