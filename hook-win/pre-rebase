@@ -16,12 +16,12 @@ current_branch=$(git symbolic-ref --short HEAD 2>/dev/null)
 
 for branch in "${protected_branches[@]}"; do
     if [[ "$current_branch" == "$branch" ]]; then
-        echo "❌ Rebase on $branch is blocked. Please use merge or create a feature branch."
+        echo "Rebase on $branch is blocked. Please use merge or create a feature branch."
         show_dialog "Rebase on $branch is blocked. Please use merge or create a feature branch." "Rebase Blocked"
         exit 1
     fi
 
 done
 
-echo "✅ Pre-rebase checks passed"
+echo "Pre-rebase checks passed"
 exit 0
