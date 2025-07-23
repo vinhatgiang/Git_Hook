@@ -3,3 +3,4 @@ Bug fix for feature ABC
 Test force-with-lease
 Conflict content
 Create conflict
+Alternative content for testing
