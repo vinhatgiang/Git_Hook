@@ -28,12 +28,37 @@ detect_force_push() {
     
     # Check if this is a fast-forward push
     # If remote commit is NOT reachable from local commit, it's non-fast-forward
-    # This catches --force, --force-with-lease, and + prefix syntax
+    # This catches ALL force push variants including --force, --force-with-lease, + prefix
     if ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
         return 0  # Non-fast-forward push detected (any force variant)
     fi
     
     return 1  # Fast-forward push is OK
+}
+
+# Function to check environment variables and git arguments for force indicators
+detect_force_from_environment() {
+    # Check for Git push options that might indicate force
+    if [ -n "$GIT_PUSH_OPTION_COUNT" ]; then
+        local i=0
+        while [ $i -lt "$GIT_PUSH_OPTION_COUNT" ]; do
+            local var_name="GIT_PUSH_OPTION_$i"
+            local var_value=$(eval echo \$$var_name)
+            if echo "$var_value" | grep -q "force"; then
+                return 0  # Force option detected
+            fi
+            i=$((i + 1))
+        done
+    fi
+    
+    # Check command line from environment if available
+    if [ -n "$GIT_COMMAND_LINE" ]; then
+        if echo "$GIT_COMMAND_LINE" | grep -q -E "(--force|--force-with-lease|--force-if-includes|\+[a-zA-Z0-9/_-]+|-f[^a-zA-Z])"; then
+            return 0  # Force detected in command line
+        fi
+    fi
+    
+    return 1  # No force indicators found
 }
 
 # Function to detect force push by checking command line arguments
@@ -73,26 +98,38 @@ while read local_ref local_sha remote_ref remote_sha; do
     if [[ "$remote_ref" =~ ^refs/heads/ ]]; then
         remote_branch=${remote_ref#refs/heads/}
         
-        # Check for force push by analyzing refs (catches most force pushes)
+        # Check for force push by analyzing refs (PRIMARY METHOD - catches most force pushes)
         if detect_force_push "$local_sha" "$remote_sha" "$remote_ref"; then
             echo
             echo "FORCE PUSH BLOCKED"
-            echo "Force push (--force, --force-with-lease, + prefix) is not allowed."
-            echo "This action is prohibited."
+            echo "Non-fast-forward push detected (all force push variants are prohibited)."
+            echo "This action is not allowed."
             
-            show_dialog "Force push blocked.\n\nAll force push variants are prohibited." "Force Push Blocked"
+            show_dialog "Force push blocked.\n\nNon-fast-forward push detected. All force push variants are prohibited." "Force Push Blocked"
             
             exit 1
         fi
         
-        # Additional check for force flags in command line (catches --force-if-includes)
+        # Additional check for force flags in environment (SECONDARY METHOD)
+        if detect_force_from_environment; then
+            echo
+            echo "FORCE PUSH BLOCKED"
+            echo "Force push detected via environment variables."
+            echo "This action is not allowed."
+            
+            show_dialog "Force push blocked.\n\nForce push detected via environment." "Force Push Blocked"
+            
+            exit 1
+        fi
+        
+        # Final check for force flags in command line (BACKUP METHOD)
         if detect_force_by_cmdline; then
             echo
             echo "FORCE PUSH BLOCKED"
-            echo "Force push (--force-if-includes or other variants) is not allowed."
-            echo "This action is prohibited."
+            echo "All force push variants (--force, --force-with-lease, --force-with-lease=ref:hash, --force-if-includes, +prefix) are prohibited."
+            echo "This action is not allowed."
             
-            show_dialog "Force push blocked.\n\nAll force push variants are prohibited." "Force Push Blocked"
+            show_dialog "Force push blocked.\n\nAll force push variants including specific lease format are prohibited." "Force Push Blocked"
             
             exit 1
         fi
