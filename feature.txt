@@ -5,3 +5,4 @@ Conflict content
 Different content
   TestDifferent content for specific lease test
 Create new conflict for testing
+Test strict detection
