@@ -10,8 +10,8 @@ show_dialog() {
     powershell.exe -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$msg', '$title')" > /dev/null
 }
 
-# Function to detect non-fast-forward push (force push detection)
-detect_non_fast_forward_push() {
+# Function to detect force push (includes --force and --force-with-lease)
+detect_force_push() {
     local local_sha="$1"
     local remote_sha="$2"
     local remote_ref="$3"
@@ -29,8 +29,9 @@ detect_non_fast_forward_push() {
     
     # Check if this is a fast-forward push
     # If remote commit is NOT reachable from local commit, it's non-fast-forward
+    # This catches both --force and --force-with-lease
     if ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
-        return 0  # Non-fast-forward push detected
+        return 0  # Non-fast-forward push detected (force or force-with-lease)
     fi
     
     return 1  # Fast-forward push is OK
@@ -52,13 +53,14 @@ while read local_ref local_sha remote_ref remote_sha; do
     if [[ "$remote_ref" =~ ^refs/heads/ ]]; then
         remote_branch=${remote_ref#refs/heads/}
         
-        # Check for non-fast-forward push (this catches ALL force pushes)
-        if detect_non_fast_forward_push "$local_sha" "$remote_sha" "$remote_ref"; then
+        # Check for force push (includes both --force and --force-with-lease)
+        if detect_force_push "$local_sha" "$remote_sha" "$remote_ref"; then
             echo
-            echo "FORCE UPDATE BLOCKED"
-            echo "Force update is not allowed."
+            echo "FORCE PUSH BLOCKED"
+            echo "Force push (--force or --force-with-lease) is not allowed."
+            echo "This action is prohibited."
             
-            show_dialog "Force update blocked. Force update is not allowed." "Force Update Blocked"
+            show_dialog "Force push blocked. Force push (--force or --force-with-lease) is not allowed." "Force Push Blocked"
             
             exit 1
         fi
