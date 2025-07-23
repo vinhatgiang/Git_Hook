@@ -4,28 +4,35 @@ Bộ Git hooks tự động để bảo vệ repository và đảm bảo quy t�
 
 ## Tính năng
 
-✅ **Chặn commit/push vào branch chính** (main, develop)  
-✅ **Chặn force push**  
-✅ **Chặn rebase operations**  
-✅ **Kiểm tra độ dài commit message** (tối thiểu 10 ký tự)  
+**Chặn commit/push vào branch chính** (main, develop)  
+**Chặn force push**  
+**Chặn rebase operations**  
+**Kiểm tra độ dài commit message** (tối thiểu 10 ký tự)  
 
 ## Cài đặt
 
 ### Windows (Git Bash)
 
-1. Mở **Git Bash** trong thư mục project
-2. Chạy lệnh:
+1. Copy thư mục hook-win và file install_hooks.sh vào trong thư mục project (nới có file `.git`)
+2. Mở **Git Bash** trong thư mục project (nới có file `.git`)
+3. Chạy lệnh:
 ```bash
 bash install_hooks.sh
 ```
 
 ### macOS (Terminal)
 
-1. Mở **Terminal** trong thư mục project
-2. Chạy lệnh:
-```bash
-bash install_hooks.sh
-```
+1. Copy thư mục hook-win và file install_hooks.sh vào trong thư mục project (nới có file `.git`)
+2. Mở **Terminal** trong thư mục project (nơi có file `.git`)
+3. Chạy script cài đặt:
+   ```bash
+   bash install_hooks.sh
+   ```
+
+### Sau khi cài đặt xong có thể xoá thư mục và file vừa copy vào thư mục project
+
+### Có thể vào thư mục .git/hooks của project để xoá các file đã được cài đặt
+
 
 ## Quy tắc Commit Message
 
