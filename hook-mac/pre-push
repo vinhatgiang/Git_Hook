@@ -54,12 +54,9 @@ while read local_ref local_sha remote_ref remote_sha; do
         
         # Check for force push (includes both --force and --force-with-lease)
         if detect_force_push "$local_sha" "$remote_sha" "$remote_ref"; then
-            echo
-            echo "FORCE PUSH BLOCKED"
-            echo "Force push (--force or --force-with-lease) is not allowed."
-            echo "This action is prohibited."
+            echo "Force push is prohibited."
             
-            show_dialog "Force push blocked.\n\nForce push (--force or --force-with-lease) is not allowed." "Force Push Blocked"
+            show_dialog "Force push is prohibited." "Prohibited"
             
             exit 1
         fi
