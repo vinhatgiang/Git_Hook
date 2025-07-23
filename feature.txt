@@ -4,3 +4,7 @@ Test force-with-lease
 Conflict content
 Create conflict
 Alternative content for testing
+Different content for specific lease test
+Create new conflict for testing
+Test strict detection
+Alternative commit for strict test
