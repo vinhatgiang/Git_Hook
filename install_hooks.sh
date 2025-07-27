@@ -76,9 +76,6 @@ for hook in commit-msg pre-commit pre-push pre-rebase; do
     # Add to installed hooks list for potential rollback
     INSTALLED_HOOKS+=("$hook")
     
-    # Add to Git to track permissions
-    git add "$dst" >/dev/null 2>&1
-    
     echo "Installed: $hook"
 done
 
