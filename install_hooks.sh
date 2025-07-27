@@ -1,8 +1,6 @@
 #!/bin/bash
-
 # Script to install Git hooks
 # Platform: Windows (Git Bash) / macOS
-
 echo "====================================="
 echo "        Git Hooks Installer"
 echo "====================================="
@@ -35,40 +33,49 @@ fi
 
 echo "Installing Git hooks..."
 
+# Array to track installed hooks for rollback
+INSTALLED_HOOKS=()
+
+# Function to rollback installed hooks
+rollback_hooks() {
+    echo "Error occurred! Rolling back installed hooks..."
+    for hook in "${INSTALLED_HOOKS[@]}"; do
+        if [ -f "$HOOKS_DIR/$hook" ]; then
+            rm -f "$HOOKS_DIR/$hook"
+            echo "Removed: $hook"
+        fi
+    done
+    echo "Rollback completed!"
+    exit 1
+}
+
 # Install hooks
 for hook in commit-msg pre-commit pre-push pre-rebase; do
     src="$SOURCE_DIR/$hook"
     dst="$HOOKS_DIR/$hook"
     
     if [ ! -f "$src" ]; then
-        echo "Missing hook: $hook"
-        continue
+        echo "Error: Missing hook file - $hook"
+        rollback_hooks
     fi
     
     echo "Installing $hook..."
     
     # Copy hook and handle errors
-    cp "$src" "$dst" || {
-        echo "Failed to copy $hook"
-        continue
-    }
-    
-    # Fix line endings and set permissions
-    if [[ "$OSTYPE" != "darwin"* ]]; then
-        # For Windows: Remove CRLF and try multiple permission methods
-        sed -i 's/\r$//' "$dst" 2>/dev/null
-        
-        # Try multiple permission methods
-        chmod +x "$dst" 2>/dev/null || \
-        /c/Windows/System32/icacls.exe "$dst" //grant "${USERNAME}:RX" >/dev/null 2>&1
-        
-        # Ensure Git tracks the executable bit
-        git update-index --chmod=+x "$dst" 2>/dev/null
-    else
-        # For macOS: Simple permission setting
-        chmod 755 "$dst" 2>/dev/null
+    if ! cp "$src" "$dst"; then
+        echo "Error: Failed to copy $hook"
+        rollback_hooks
     fi
-
+    
+    # Set execute permissions for all hooks
+    if ! chmod +x "$dst"; then
+        echo "Error: Failed to set permissions for $hook"
+        rollback_hooks
+    fi
+    
+    # Add to installed hooks list for potential rollback
+    INSTALLED_HOOKS+=("$hook")
+    
     # Add to Git to track permissions
     git add "$dst" >/dev/null 2>&1
     
@@ -76,5 +83,5 @@ for hook in commit-msg pre-commit pre-push pre-rebase; do
 done
 
 echo
-echo "Git hooks installed successfully!"
+echo "All Git hooks installed successfully!"
 echo "====================================="
