@@ -29,9 +29,11 @@ bash install_hooks.sh
    bash install_hooks.sh
    ```
 
-### Sau khi cài đặt xong có thể xoá thư mục và file vừa copy vào thư mục project
+### Trường hợp đã cài đặt thành công:
+Sau khi cài đặt xong có thể xoá thư mục và file vừa copy vào thư mục project
 
-### Có thể vào thư mục .git/hooks của project để xoá các file đã được cài đặt
+### Trường hợp không muốn sử dụng các rules này:
+Xoá các file trong thư mục `.git/hooks` để bỏ qua các rules vừa cài đặt xong.
 
 
 ## Quy tắc Commit Message
