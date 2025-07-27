@@ -25,7 +25,7 @@ bash install_hooks.sh
 1. Copy thư mục hook-win và file install_hooks.sh vào trong thư mục project (nới có file `.git`)
 2. Mở **Terminal** trong thư mục project (nơi có file `.git`)
 3. Chạy script cài đặt:
-   ```bash
+   ```bash 
    bash install_hooks.sh
    ```
 
