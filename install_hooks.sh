@@ -19,9 +19,6 @@ fi
 # Create hooks directory
 mkdir -p "$HOOKS_DIR"
 
-# Force Git to track file modes on Windows
-git config core.fileMode true
-
 # Determine source directory based on OS
 if [[ "$OSTYPE" == "darwin"* ]]; then
     SOURCE_DIR="$SCRIPT_DIR/hook-mac"
@@ -67,7 +64,8 @@ for hook in commit-msg pre-commit pre-push pre-rebase; do
         rollback_hooks
     fi
     
-    # Set execute permissions for all hooks
+    # Set execute permissions only for hook files
+    # This won't affect other files in the project since we're only changing .git/hooks
     if ! chmod +x "$dst"; then
         echo "Error: Failed to set permissions for $hook"
         rollback_hooks
@@ -81,4 +79,5 @@ done
 
 echo
 echo "All Git hooks installed successfully!"
+echo "Hook files location: $HOOKS_DIR"
 echo "====================================="
