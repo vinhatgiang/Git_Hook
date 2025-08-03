@@ -1,7 +1,7 @@
 # Git Hooks
-Vi Vi Vi
+Vi Vi Vi  vi viv vo
 Bộ Git hooks tự động để bảo vệ repository và đảm bảo quy tắc phát triển.
-VI VI Vi 
+VI VI Vi   
 
 ## Tính năng
 
