@@ -1,6 +1,7 @@
 # Git Hooks
 
 Bộ Git hooks tự động để bảo vệ repository và đảm bảo quy tắc phát triển.
+VI Nhật Giang VI Nhật Giang
 
 ## Tính năng
 
