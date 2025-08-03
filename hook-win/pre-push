@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Git Hook: pre-push
 # Platform: Windows (Git Bash)
 # Purpose: Prevent pushes to main and develop branches, detect force pushes
@@ -10,7 +9,7 @@ show_dialog() {
     powershell.exe -WindowStyle Hidden -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('$msg', '$title')" > /dev/null
 }
 
-# Function to detect force push (includes --force and --force-with-lease)
+# Function to detect force push - FIXED VERSION
 detect_force_push() {
     local local_sha="$1"
     local remote_sha="$2"
@@ -27,14 +26,54 @@ detect_force_push() {
         return 1  # New branch is OK
     fi
     
-    # Check if this is a fast-forward push
-    # If remote commit is NOT reachable from local commit, it's non-fast-forward
-    # This catches both --force and --force-with-lease
-    if ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
-        return 0  # Non-fast-forward push detected (force or force-with-lease)
+    # FIXED: Check if this is actually a force push by examining command line
+    # The pre-push hook receives the actual push parameters, but we need to check
+    # if --force or --force-with-lease was used
+    
+    # Method 1: Check if remote branch exists and is ahead
+    # First, fetch the latest remote info quietly
+    git fetch origin "$remote_branch" --quiet 2>/dev/null || return 1
+    
+    # Get the actual remote HEAD
+    actual_remote_sha=$(git rev-parse "origin/$remote_branch" 2>/dev/null)
+    
+    # If we can't get remote SHA, assume it's safe
+    if [ -z "$actual_remote_sha" ]; then
+        return 1
+    fi
+    
+    # Check if local branch contains all commits from remote
+    # If not, this would require force push to succeed
+    if ! git merge-base --is-ancestor "$actual_remote_sha" "$local_sha" 2>/dev/null; then
+        # Additional check: see if this is a legitimate divergence
+        # that would be rejected by Git anyway (not a force push scenario)
+        
+        # Check if the remote has commits that local doesn't have
+        if git merge-base --is-ancestor "$local_sha" "$actual_remote_sha" 2>/dev/null; then
+            # Remote is ahead of local - this would be rejected by Git
+            # This is NOT a force push, it's a normal rejected push
+            return 1
+        fi
+        
+        # Both branches have diverged - this indicates potential force push
+        return 0
     fi
     
     return 1  # Fast-forward push is OK
+}
+
+# Alternative method: Check for force push by examining git command
+# This is more reliable but requires parsing process arguments
+detect_force_push_alternative() {
+    # Check parent processes for git push with --force flags
+    local parent_pid=$(ps -o ppid= -p $$)
+    local git_cmd=$(ps -o args= -p "$parent_pid" 2>/dev/null | head -1)
+    
+    if [[ "$git_cmd" =~ --force-with-lease ]] || [[ "$git_cmd" =~ --force ]] || [[ "$git_cmd" =~ -f[[:space:]] ]]; then
+        return 0  # Force push detected
+    fi
+    
+    return 1  # No force push
 }
 
 # Check for rebase in commit history being pushed
@@ -53,7 +92,39 @@ while read local_ref local_sha remote_ref remote_sha; do
     if [[ "$remote_ref" =~ ^refs/heads/ ]]; then
         remote_branch=${remote_ref#refs/heads/}
         
-        # Check for force push (includes both --force and --force-with-lease)
+        # Check if pushing to protected branches FIRST
+        # This is more important than force push detection
+        if [ "$remote_branch" = "main" ]; then
+            echo
+            echo "PUSH TO MAIN BRANCH BLOCKED"
+            echo "This action is not allowed."
+            
+            show_dialog "Push to main branch is blocked. This action is not allowed." "Push Blocked"
+            
+            exit 1
+        fi
+        
+        if [ "$remote_branch" = "develop" ]; then
+            echo
+            echo "PUSH TO DEVELOP BRANCH BLOCKED"
+            echo "This action is not allowed."
+            
+            show_dialog "Push to develop branch is blocked. This action is not allowed." "Push Blocked"
+            
+            exit 1
+        fi
+        
+        # Check for force push using alternative method (more reliable)
+        if detect_force_push_alternative; then
+            echo "Force push is prohibited."
+            
+            show_dialog "Force push is prohibited." "Prohibited"
+            
+            exit 1
+        fi
+        
+        # Fallback: Check for force push using git analysis
+        # Only if alternative method didn't detect anything
         if detect_force_push "$local_sha" "$remote_sha" "$remote_ref"; then
             echo "Force push is prohibited."
             
@@ -71,27 +142,6 @@ while read local_ref local_sha remote_ref remote_sha; do
             echo "Push blocked."
             
             show_dialog "Rebase detected in push history. Rebase is prohibited in this repository." "Push Blocked"
-            
-            exit 1
-        fi
-        
-        # Check if pushing to protected branches
-        if [ "$remote_branch" = "main" ]; then
-            echo
-            echo "PUSH TO MAIN BRANCH BLOCKED"
-            echo "This action is not allowed."
-            
-            show_dialog "Push to main branch is blocked. This action is not allowed." "Push Blocked"
-            
-            exit 1
-        fi
-        
-        if [ "$remote_branch" = "develop" ]; then
-            echo
-            echo "PUSH TO DEVELOP BRANCH BLOCKED"
-            echo "This action is not allowed."
-            
-            show_dialog "Push to develop branch is blocked. This action is not allowed." "Push Blocked"
             
             exit 1
         fi
