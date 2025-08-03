@@ -1,14 +1,14 @@
 # Git Hooks
-Vi Vi Vi  vi viv vo
+
 Bộ Git hooks tự động để bảo vệ repository và đảm bảo quy tắc phát triển.
-VI VI Vi   
+VI Nhật Giang VI Nhật Giang
 
 ## Tính năng
 
 **Chặn commit/push vào branch chính** (main, develop)  
 **Chặn force push**  
 **Chặn rebase operations**  
-**Kiểm tra độ dài commit message** (tối thiểu 10 ký tự)  Vi VI Vi
+**Kiểm tra độ dài commit message** (tối thiểu 10 ký tự)  
 
 ## Cài đặt
 
